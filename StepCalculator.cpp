@@ -56,7 +56,7 @@ struct StringRead {
     void preWork() {
         string t;
         for (int i = 0; i < s.size(); ++i) {
-        	if (s[i] == '+' && (i == 0 || s[i - 1] == '(')) continue;
+            if (s[i] == '+' && (i == 0 || s[i - 1] == '(')) continue;
             if (s[i] == '-' && (i == 0 || s[i - 1] == '(')) t.push_back('0');
             t.push_back(s[i]);
         }
@@ -137,7 +137,7 @@ inline string getShow2(const list<ll>& a) {  //  返回中缀表达式
             re.push_back(char(i - INF));
         else if (i == 0 && (it == ans.begin() || *prev(it) == '(' + INF) && next(it) != ans.end() && *next(it) == '-' + INF)
             continue;
-        else if (i < 0 && it != ans.begin() && ans.size() != 1) {
+        else if (i < 0 && it != ans.begin() && *prev(it) != '(' + INF && ans.size() != 1) {
             re.push_back('(');
             re += to_string(i);
             re.push_back(')');
