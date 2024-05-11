@@ -37,9 +37,9 @@ inline ll cal(ll a, ll b, char op) {
 struct StringRead {
     string s;
     size_t cur = 0;
-    bool empty(){
-    	return s.size()==0;
-	}
+    bool empty() {
+        return s.size() == 0;
+    }
     void refresh() {
         cur = 0;
     }
@@ -53,6 +53,15 @@ struct StringRead {
         else
             return s[cur++];
     }
+    void preWork() {
+        string t;
+        for (int i = 0; i < s.size(); ++i) {
+        	if (s[i] == '+' && (i == 0 || s[i - 1] == '(')) continue;
+            if (s[i] == '-' && (i == 0 || s[i - 1] == '(')) t.push_back('0');
+            t.push_back(s[i]);
+        }
+        s = t;
+    }
 } s;
 
 list<ll> dfs() {
@@ -61,8 +70,10 @@ list<ll> dfs() {
     char c;
     while (c = s.nextChar()) {
     begin:
-        if (c == '(') re.splice(re.end(), dfs());
-        else if (c == ')') break;
+        if (c == '(')
+            re.splice(re.end(), dfs());
+        else if (c == ')')
+            break;
         else if (pri[c]) {
             while (!op.empty() && pri[op.top()] >= pri[c]) {
                 re.push_back(op.top() + INF);
@@ -89,54 +100,78 @@ list<ll> dfs() {
     return re;
 }
 
-inline void show2(const list<ll>& a) {  // 展示中缀表达式
-    list<list<ll> > re;
+inline string getShow2(const list<ll>& a) {  //  返回中缀表达式
+    list<list<ll> > lists;
     for (ll i : a) {
         if (i > INF) {
             i -= INF;
-            list<ll> b = move(re.back());
-            re.pop_back();
-            list<ll>& a = re.back();
+            list<ll> b = move(lists.back());
+            lists.pop_back();
+            list<ll>& a = lists.back();
             if (pri[a.front()] < pri[i]) {
                 a.front() = '(' + INF;
                 a.push_front(i);
                 a.push_back(')' + INF);
             }
-            else a.front() = i;
+            else
+                a.front() = i;
             if (pri[b.front()] <= pri[i]) {
                 b.front() = '(' + INF;
                 b.push_front(i + INF);
                 b.push_back(')' + INF);
             }
-            else b.front() = i + INF;
+            else
+                b.front() = i + INF;
             a.splice(a.end(), b);
         }
         else {
-            re.emplace_back(list<ll>{0, i});
+            lists.emplace_back(list<ll>{0, i});
         }
     }
-    list<ll>& ans = re.back();
+    list<ll>& ans = lists.back();
     ans.pop_front();
-    for (const ll& i : ans) {
-        if (i > INF) cout << char(i - INF);
-        else cout << i;
+    string re;
+    for (auto it = ans.begin(); it != ans.end(); ++it) {
+        ll i = *it;
+        if (i > INF)
+            re.push_back(char(i - INF));
+        else if (i == 0 && (it == ans.begin() || *prev(it) == '(' + INF) && next(it) != ans.end() && *next(it) == '-' + INF)
+            continue;
+        else if (i < 0 && it != ans.begin() && ans.size() != 1) {
+            re.push_back('(');
+            re += to_string(i);
+            re.push_back(')');
+        }
+        else
+            re += to_string(i);
     }
-    cout << '\n';
+    return re;
+}
+
+inline void show2(const list<ll>& a) {  // 展示中缀表达式
+    static int cnt = 0;
+    static string s0 = "";
+    string s = getShow2(a);
+    if (s != s0) {
+        cout << cnt++ << '\t';
+        cout << s << '\n';
+        s0 = s;
+    }
 }
 
 inline void show3(const list<ll>& a) {  // 展示后缀表达式（逆波兰式）
     for (const ll& i : a) {
-        if (i > INF) cout << char(i - INF) << ' ';
-        else cout << i << ' ';
+        if (i > INF)
+            cout << char(i - INF) << ' ';
+        else
+            cout << i << ' ';
     }
     cout << '\n';
 }
 
 inline void work(list<ll>& a) {
     cout << "步骤\t结果\n";
-    cout << "0\t";
     show2(a);
-    int cnt = 0;
     for (auto it = a.begin(); it != a.end(); ++it) {
         if (*it < INF) continue;
         char op = char(*it - INF);
@@ -144,7 +179,6 @@ inline void work(list<ll>& a) {
         *it = cal(p, q, op);
         a.erase(prev(it));
         a.erase(prev(it));
-        cout << ++cnt << '\t';
         show2(a);
     }
 }
@@ -152,11 +186,12 @@ inline void work(list<ll>& a) {
 signed main() {
     init();
     while (true) {
-    	s.read();
-    	list<ll> a = dfs();
-    	work(a);
-    	cout << '\n';
-	}
+        s.read();
+        s.preWork();
+        list<ll> a = dfs();
+        work(a);
+        cout << '\n';
+    }
 
     return 0;
 }
@@ -165,7 +200,9 @@ signed main() {
 
 ((5+6)*2^3)^4-1*10/(3-1)
 
-1+(2*3+4^9/2)+5*6*56/9-2^3*(1+2+12-114514/1919810)*((2024-2022)^(5-4)+3*(0-9))-3^9-68
+-1+(-2*3+4^9/2)+5*6*56/9-2^3*(1+2+12-114514/1919810)*((2024-2022)^(5-4)-(-3)*(-9))-3^9+(-3)^3*2
+
+-1-(-2)*(-3/4-5)+(-3)+9
 
 */
 
