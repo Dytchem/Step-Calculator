@@ -7,6 +7,7 @@ typedef long long ll;
 
 int pri[128];
 inline void init() {
+    pri['('] = pri[')'] = -1;
     pri['+'] = pri['-'] = 1;
     pri['*'] = pri['/'] = 2;
     pri['^'] = 3;
@@ -44,7 +45,9 @@ struct StringRead {
         cur = 0;
     }
     void read() {
-        cin >> s;
+        do {
+            getline(cin, s);
+        } while (s.empty());
         refresh();
     }
     char nextChar() {
@@ -53,10 +56,14 @@ struct StringRead {
         else
             return s[cur++];
     }
-    void preWork() {
+    int rest() {
+        return s.size() - cur;
+    }
+    void preWork() {  // 初始格式化字符串
         string t;
         for (int i = 0; i < s.size(); ++i) {
-            if (s[i] == '+' && (i == 0 || s[i - 1] == '(')) continue;
+            if (s[i] == ' ' || s[i] == '+' && (i == 0 || s[i - 1] == '(')) continue;
+            if (!isdigit(s[i]) && pri[s[i]] == 0) return s = "", void();
             if (s[i] == '-' && (i == 0 || s[i - 1] == '(')) t.push_back('0');
             t.push_back(s[i]);
         }
@@ -105,8 +112,10 @@ inline string getShow2(const list<ll>& a) {  //  返回中缀表达式
     for (ll i : a) {
         if (i > INF) {
             i -= INF;
+            if (lists.empty()) return "";  // 异常返回
             list<ll> b = move(lists.back());
             lists.pop_back();
+            if (lists.empty()) return "";  // 异常返回
             list<ll>& a = lists.back();
             if (pri[a.front()] < pri[i]) {
                 a.front() = '(' + INF;
@@ -128,6 +137,7 @@ inline string getShow2(const list<ll>& a) {  //  返回中缀表达式
             lists.emplace_back(list<ll>{0, i});
         }
     }
+    if (lists.size() != 1) return "";
     list<ll>& ans = lists.back();
     ans.pop_front();
     string re;
@@ -148,9 +158,9 @@ inline string getShow2(const list<ll>& a) {  //  返回中缀表达式
     return re;
 }
 
+int cnt = 0;
+string s0 = "";
 inline void show2(const list<ll>& a) {  // 展示中缀表达式
-    static int cnt = 0;
-    static string s0 = "";
     string s = getShow2(a);
     if (s != s0) {
         cout << cnt++ << '\t';
@@ -169,13 +179,32 @@ inline void show3(const list<ll>& a) {  // 展示后缀表达式（逆波兰式）
     cout << '\n';
 }
 
-inline void work(list<ll>& a) {
+inline void work() {
+    s.read();
+    s.preWork();
+    if (s.empty()) {
+        cout << "输入异常\n\n";
+        return;
+    }
+    list<ll> a = dfs();
+    cout << "逆波兰式：";
+    show3(a);
+    if (s.rest() != 0 || getShow2(a) == "") {
+        cout << "输入异常\n\n";
+        return;
+    }
     cout << "步骤\t结果\n";
+    cnt = 0;
+    s0 = "";
     show2(a);
     for (auto it = a.begin(); it != a.end(); ++it) {
         if (*it < INF) continue;
         char op = char(*it - INF);
         ll p = *prev(prev(it)), q = *prev(it);
+        if (q == 0 && op == '/') {
+            cout << "计算错误\n\n";
+            return;
+        }
         *it = cal(p, q, op);
         a.erase(prev(it));
         a.erase(prev(it));
@@ -186,10 +215,7 @@ inline void work(list<ll>& a) {
 signed main() {
     init();
     while (true) {
-        s.read();
-        s.preWork();
-        list<ll> a = dfs();
-        work(a);
+        work();
         cout << '\n';
     }
 
@@ -203,6 +229,8 @@ signed main() {
 -1+(-2*3+4^9/2)+5*6*56/9-2^3*(1+2+12-114514/1919810)*((2024-2022)^(5-4)-(-3)*(-9))-3^9+(-3)^3*2
 
 -1-(-2)*(-3/4-5)+(-3)+9
+
+-1-(-(+(-1)))-(-1)*(-1)/(-1-1)
 
 */
 
